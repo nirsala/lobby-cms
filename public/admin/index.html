@@ -403,6 +403,27 @@ nav{padding:12px 0;flex:1;}
 
       <div class="card">
         <div class="card-title">
+          <svg viewBox="0 0 24 24"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+          מהירות גלילה
+        </div>
+        <div class="form-row">
+          <div class="form-group form-full">
+            <label>מהירות גלילת ההודעות: <span id="msg-speed-val">40</span> שניות לסבב</label>
+            <input type="range" id="msg-speed" min="15" max="120" value="40"
+              oninput="document.getElementById('msg-speed-val').textContent=this.value"
+              style="accent-color:var(--red);margin-top:12px;width:100%"/>
+            <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-top:4px;">
+              <span>מהיר</span><span>איטי</span>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:16px;">
+          <button class="btn btn-primary" onclick="saveMsgSpeed()">שמור מהירות</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
           <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
           הודעות קיימות
         </div>
@@ -499,17 +520,17 @@ nav{padding:12px 0;flex:1;}
       <div class="card">
         <div class="card-title">
           <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-          בחר ז׳אנר
+          קבצי מוזיקה
         </div>
-        <div class="music-grid" id="music-grid">טוען...</div>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:16px;">העלה קבצי MP3 / AAC / WAV — המערכת תנגן אותם ברצף, גם ללא אינטרנט</p>
 
-        <!-- Custom URL -->
-        <div id="custom-url-row" style="margin-top:16px;display:none;">
-          <div class="form-group">
-            <label>URL של שידור מותאם אישית</label>
-            <input type="url" id="music-custom-url" placeholder="https://stream.example.com/radio.mp3"/>
-          </div>
-        </div>
+        <label class="upload-zone" style="cursor:pointer;display:block;margin-bottom:16px;" id="music-upload-label">
+          <input type="file" id="music-file-input" accept="audio/*" multiple style="display:none" onchange="uploadMusicFiles(this.files)"/>
+          <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" fill="none" stroke-width="1.5" style="opacity:.5;margin-bottom:8px;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          <div style="font-size:.9rem;color:var(--muted);">לחץ להעלאת קובצי אודיו<br/><span style="font-size:.75rem;">MP3, AAC, WAV, OGG — ניתן לבחור מספר קבצים</span></div>
+        </label>
+
+        <div id="music-files-list" style="display:flex;flex-direction:column;gap:8px;"></div>
       </div>
     </div>
 
@@ -651,7 +672,6 @@ nav{padding:12px 0;flex:1;}
 <script>
 const API = '/api';
 let selectedFiles = [];
-let currentMusicGenre = 'lounge';
 
 // ══ Nav ══════════════════════════════════════════════════════════
 document.querySelectorAll('.nav-item').forEach(item => {
@@ -788,6 +808,10 @@ async function addMessage() {
 }
 
 async function loadMessages() {
+  const s = await api('GET', '/settings');
+  const spd = s.message_scroll_speed || 40;
+  document.getElementById('msg-speed').value = spd;
+  document.getElementById('msg-speed-val').textContent = spd;
   const msgs = await api('GET', '/messages');
   const list = document.getElementById('msg-list');
   if (!msgs.length) { list.innerHTML = '<p style="color:var(--muted);font-size:.85rem;">אין הודעות — הוסף מהטופס למעלה</p>'; return; }
@@ -814,6 +838,11 @@ async function toggleMsg(id, active) {
   if (!m) return;
   await api('PUT', '/messages/' + id, { ...m, active: active?0:1 });
   loadMessages();
+}
+
+async function saveMsgSpeed() {
+  await api('PUT', '/settings', { message_scroll_speed: document.getElementById('msg-speed').value });
+  toast('מהירות גלילה נשמרה');
 }
 
 // ══ RSS ══════════════════════════════════════════════════════════
@@ -861,54 +890,60 @@ async function previewRss() {
   const card = document.getElementById('rss-preview-card');
   const list = document.getElementById('rss-preview-list');
   card.style.display = 'block';
-  list.innerHTML = data.items.slice(0,20).map(item =>
+  list.innerHTML = data.items.slice(0,10).map(item =>
     `<div style="padding:8px 12px;border-right:3px solid var(--red);background:var(--bg2);border-radius:4px;font-size:.85rem;">${esc(item)}</div>`
   ).join('');
 }
 
 // ══ MUSIC ════════════════════════════════════════════════════════
 async function loadMusic() {
-  const [genres, config] = await Promise.all([
-    api('GET', '/music/genres'),
-    api('GET', '/music/config'),
-  ]);
-  currentMusicGenre = config.genre || 'lounge';
+  const config = await api('GET', '/music/config');
   document.getElementById('music-enabled').checked = !!config.enabled;
   document.getElementById('music-volume').value = config.volume || 30;
   document.getElementById('volume-val').textContent = config.volume || 30;
-
-  const icons = { off:'🔇', lounge:'🛋️', jazz:'🎷', classical:'🎼', israeli:'🇮🇱', nature:'🌿', custom:'🔗' };
-  const grid = document.getElementById('music-grid');
-  grid.innerHTML = Object.entries(genres).map(([key,g]) => `
-    <div class="music-card ${currentMusicGenre===key?'selected':''}" onclick="selectGenre('${key}',this)">
-      <div class="music-icon">${icons[key]||'🎵'}</div>
-      <div class="music-name">${g.name}</div>
-    </div>
-  `).join('');
-
-  if (currentMusicGenre === 'custom') {
-    document.getElementById('custom-url-row').style.display = 'block';
-  }
+  await loadMusicFiles();
 }
 
-function selectGenre(key, el) {
-  document.querySelectorAll('.music-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  currentMusicGenre = key;
-  document.getElementById('custom-url-row').style.display = key==='custom' ? 'block' : 'none';
+async function loadMusicFiles() {
+  const files = await api('GET', '/music/files');
+  const list  = document.getElementById('music-files-list');
+  if (!files.length) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:.85rem;text-align:center;padding:12px;">אין קבצי מוזיקה — העלה קבצים מהאזור למעלה</p>';
+    return;
+  }
+  list.innerHTML = files.map(f => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border-radius:8px;border:1px solid var(--border2);">
+      <span style="font-size:1.4rem;">🎵</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:.85rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(f.original || f.filename)}</div>
+      </div>
+      <button class="btn btn-outline" style="padding:4px 10px;font-size:.75rem;" onclick="deleteMusicFile(${f.id})">מחק</button>
+    </div>
+  `).join('');
+}
+
+async function uploadMusicFiles(files) {
+  for (const file of files) {
+    const fd = new FormData();
+    fd.append('file', file);
+    await fetch('/api/music/files', { method: 'POST', body: fd });
+  }
+  toast(`${files.length} קבצים הועלו`);
+  await loadMusicFiles();
+  document.getElementById('music-file-input').value = '';
+}
+
+async function deleteMusicFile(id) {
+  await api('DELETE', '/music/files/' + id);
+  await loadMusicFiles();
+  toast('קובץ נמחק');
 }
 
 async function saveMusicConfig() {
-  const body = {
-    genre  : currentMusicGenre,
+  await api('PUT', '/music/config', {
     volume : document.getElementById('music-volume').value,
     enabled: document.getElementById('music-enabled').checked,
-  };
-  if (currentMusicGenre === 'custom') {
-    const url = document.getElementById('music-custom-url').value;
-    await api('PUT', '/settings', { music_custom_url: url });
-  }
-  await api('PUT', '/music/config', body);
+  });
   toast('הגדרות מוזיקה נשמרו');
 }
 

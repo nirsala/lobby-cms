@@ -362,7 +362,7 @@ function applyMessages() {
   });
 
   // Set animation duration (approx based on count)
-  const dur = Math.max(20, msgs.length * 8);
+  const dur = state.message_speed || Math.max(20, msgs.length * 8);
   track.style.setProperty('--scroll-dur', dur + 's');
   track.style.animationDuration = dur + 's';
 }
@@ -396,19 +396,35 @@ function applyMusic() {
   const src    = document.getElementById('music-src');
   const music  = state.music;
 
-  if (!music?.enabled || !music?.url) {
+  if (!music?.enabled || !music?.files?.length) {
     player.pause();
     return;
   }
+
   player.volume = (music.volume || 30) / 100;
-  if (src.src !== music.url) {
-    src.src = music.url;
+
+  // Build playlist from files
+  const urls = music.files.map(f => f.url);
+  let currentIdx = 0;
+
+  function playIdx(i) {
+    currentIdx = ((i % urls.length) + urls.length) % urls.length;
+    src.src = urls[currentIdx];
     player.load();
+    player.play().catch(() => {
+      document.addEventListener('click', () => player.play(), { once: true });
+    });
   }
-  player.play().catch(() => {
-    // Autoplay blocked — retry on user gesture
-    document.addEventListener('click', () => player.play(), { once: true });
-  });
+
+  // Only reset if the playlist changed
+  const newList = urls.join(',');
+  if (player.dataset.playlist !== newList) {
+    player.dataset.playlist = newList;
+    player.onended = () => playIdx(currentIdx + 1);
+    playIdx(0);
+  } else {
+    player.volume = (music.volume || 30) / 100;
+  }
 }
 
 // ── Clock ─────────────────────────────────────────────────────────

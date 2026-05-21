@@ -54,6 +54,15 @@ db.exec(`
   );
   INSERT OR IGNORE INTO music_config (id) VALUES (1);
 
+  CREATE TABLE IF NOT EXISTS music_files (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    filename   TEXT NOT NULL,
+    original   TEXT,
+    sort_order INTEGER DEFAULT 0,
+    active     INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS settings (
     key   TEXT PRIMARY KEY,
     value TEXT
@@ -68,6 +77,7 @@ const defaults = {
   xibo_client_id: '',
   xibo_client_secret: '',
   xibo_layout_id: '',
+  message_scroll_speed: '40',
 };
 const insertSetting = db.prepare(
   `INSERT OR IGNORE INTO settings(key,value) VALUES (?,?)`

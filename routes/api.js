@@ -59,7 +59,7 @@ async function fetchRss(sourceKeys) {
       const channel = parsed?.rss?.channel;
       const rawItems = channel?.item || [];
       const arr = Array.isArray(rawItems) ? rawItems : [rawItems];
-      arr.slice(0, 20).forEach(i => {
+      arr.slice(0, 10).forEach(i => {
         const title = typeof i.title === 'string' ? i.title : i.title?._ || '';
         if (title) items.push(title.trim());
       });
@@ -67,7 +67,7 @@ async function fetchRss(sourceKeys) {
       console.warn(`RSS fetch failed for ${key}:`, e.message);
     }
   }));
-  rssCache = { items: items.slice(0, 80), ts: Date.now() };
+  rssCache = { items: items.slice(0, 10), ts: Date.now() };
   return rssCache.items;
 }
 
@@ -102,7 +102,7 @@ const upload = multer({
   storage,
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const ok = /image\/(jpeg|png|gif|webp|bmp)|video\/(mp4|webm)/.test(file.mimetype);
+    const ok = /image\/(jpeg|png|gif|webp|bmp)|video\/(mp4|webm)|audio\/(mpeg|mp4|ogg|wav|aac|x-m4a)/.test(file.mimetype);
     cb(null, ok);
   }
 });
@@ -136,6 +136,7 @@ router.get('/display/state', async (req, res) => {
   const messages  = db.prepare(`SELECT * FROM messages WHERE active=1 ORDER BY sort_order, id`).all();
   const rssCfg    = db.prepare(`SELECT * FROM rss_config WHERE id=1`).get();
   const musicCfg  = db.prepare(`SELECT * FROM music_config WHERE id=1`).get();
+  const musicFiles = db.prepare(`SELECT * FROM music_files WHERE active=1 ORDER BY sort_order, id`).all();
   const settingsRows = db.prepare(`SELECT * FROM settings`).all();
   const settings  = Object.fromEntries(settingsRows.map(r => [r.key, r.value]));
 
@@ -152,8 +153,13 @@ router.get('/display/state', async (req, res) => {
     clock: { time: now.toTimeString().slice(0,8), date: fullDate, day: dayName, hebrew: hebDate },
     media: activeMedia.map(m => ({ ...m, url: '/uploads/' + m.filename })),
     messages: messages,
+    message_speed: parseInt(settings.message_scroll_speed) || 40,
     rss: { items: rssItems, speed: rssCfg?.speed || 60, enabled: !!rssCfg?.enabled },
-    music: { enabled: !!musicCfg?.enabled, genre: musicCfg?.genre, url: musicUrl, volume: musicCfg?.volume || 30 },
+    music: {
+      enabled: !!musicCfg?.enabled,
+      volume: musicCfg?.volume || 30,
+      files: musicFiles.map(f => ({ id: f.id, url: '/uploads/' + f.filename, original: f.original })),
+    },
     settings,
   });
 });
@@ -274,6 +280,29 @@ router.put('/music/config', (req, res) => {
   db.prepare(`UPDATE music_config SET genre=?,volume=?,enabled=? WHERE id=1`)
     .run(genre||'off', parseInt(volume)||30, enabled?1:0);
   res.json({ ok: true });
+});
+
+router.get('/music/files', (req, res) => {
+  res.json(db.prepare(`SELECT * FROM music_files ORDER BY sort_order, id`).all());
+});
+
+router.post('/music/files', upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const info = db.prepare(`INSERT INTO music_files(filename, original) VALUES(?,?)`)
+    .run(req.file.filename, req.file.originalname);
+  res.json({ id: info.lastInsertRowid, filename: req.file.filename });
+  broadcast();
+});
+
+router.delete('/music/files/:id', (req, res) => {
+  const row = db.prepare(`SELECT filename FROM music_files WHERE id=?`).get(req.params.id);
+  if (row) {
+    const fp = path.join(UPLOAD_DIR, row.filename);
+    if (fs.existsSync(fp)) fs.unlinkSync(fp);
+    db.prepare(`DELETE FROM music_files WHERE id=?`).run(req.params.id);
+  }
+  res.json({ ok: true });
+  broadcast();
 });
 
 // ══════════════════════════════════════════
