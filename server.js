@@ -17,8 +17,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Static files
-app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+// Static files — uploads may live on a persistent disk (env override)
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'public', 'uploads');
+app.use('/uploads', express.static(UPLOAD_DIR));
 app.use('/display', express.static(path.join(__dirname, 'public', 'display')));
 app.use('/admin',   express.static(path.join(__dirname, 'public', 'admin')));
 app.use('/assets',  express.static(path.join(__dirname, 'public', 'assets')));

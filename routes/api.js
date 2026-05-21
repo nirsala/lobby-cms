@@ -11,7 +11,7 @@ const { HDate, months } = require('@hebcal/core');
 const { db, get, getOne, run } = require('../db');
 
 const router   = express.Router();
-const UPLOAD_DIR = path.join(__dirname, '..', 'public', 'uploads');
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, '..', 'public', 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 // ── RSS source catalog ──────────────────────────────────────────
