@@ -46,15 +46,13 @@ html,body{
   opacity:.35;
 }
 #logo-wrap{
-  width:180px;height:90px;
+  width:180px;min-height:70px;
   display:flex;align-items:center;justify-content:center;
 }
-#logo-img{
-  max-width:180px;max-height:90px;object-fit:contain;
-}
-#logo-default{
-  font-size:1.4rem;font-weight:900;color:var(--red);
-  text-align:center;letter-spacing:-0.5px;
+#logo-img,#logo-default-img{
+  max-width:180px;max-height:80px;object-fit:contain;
+  filter:drop-shadow(0 0 12px rgba(215,29,67,0.18));
+  transition:filter .4s;
 }
 .divider{
   width:80%;height:1px;
@@ -197,7 +195,10 @@ html,body{
     <div id="left-panel">
       <div id="logo-wrap">
         <img id="logo-img" src="" alt="לוגו" style="display:none"/>
-        <div id="logo-default">Pixel<br>Lobby</div>
+        <picture id="logo-default">
+          <source srcset="/assets/pixel-logo.webp" type="image/webp"/>
+          <img id="logo-default-img" src="/assets/pixel-logo.png" alt="Pixel by Keshet"/>
+        </picture>
       </div>
 
       <div class="divider"></div>
@@ -286,7 +287,7 @@ function applyLogo() {
     img.onerror = () => { img.style.display='none'; def.style.display='block'; };
   } else {
     img.style.display = 'none';
-    def.style.display = 'block';
+    def.style.display = '';  // show Pixel by Keshet default logo
   }
 }
 
