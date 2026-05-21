@@ -425,10 +425,10 @@ nav{padding:12px 0;flex:1;}
         <div class="form-row">
           <div class="form-group">
             <label>מהירות גלילה (שניות לסבב)</label>
-            <input type="range" id="rss-speed" min="20" max="200" value="60"
+            <input type="range" id="rss-speed" min="20" max="200" value="30"
               oninput="document.getElementById('rss-speed-val').textContent=this.value+'s'"
               style="accent-color:var(--red)"/>
-            <span id="rss-speed-val" style="font-size:.8rem;color:var(--muted);">60s</span>
+            <span id="rss-speed-val" style="font-size:.8rem;color:var(--muted);">30s</span>
           </div>
           <div class="form-group">
             <label>הצג פס חדשות</label>
@@ -765,8 +765,8 @@ async function loadRss() {
     </div>
   `).join('');
   document.getElementById('rss-enabled').checked = !!rssConfig.enabled;
-  document.getElementById('rss-speed').value = rssConfig.speed || 60;
-  document.getElementById('rss-speed-val').textContent = (rssConfig.speed||60) + 's';
+  document.getElementById('rss-speed').value = rssConfig.speed || 30;
+  document.getElementById('rss-speed-val').textContent = (rssConfig.speed||30) + 's';
 }
 
 function toggleRss(key, el) {

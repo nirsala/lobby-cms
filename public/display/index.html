@@ -92,7 +92,6 @@ html,body{
   font-size:3.2rem;font-weight:900;letter-spacing:-2px;line-height:1;
   font-variant-numeric:tabular-nums;
 }
-#clock-seconds{font-size:1.4rem;color:var(--muted);vertical-align:super;}
 #clock-meta{margin-top:6px;}
 #clock-day{font-size:.8rem;color:var(--muted);font-weight:500;}
 #clock-date{font-size:1rem;font-weight:700;margin-top:2px;}
@@ -232,7 +231,7 @@ html,body{
     <!-- LEFT COLUMN -->
     <div id="left-col">
       <div id="clock-section">
-        <div id="clock-time">00:00<span id="clock-seconds">:00</span></div>
+        <div id="clock-time">00:00</div>
         <div id="clock-meta">
           <div id="clock-day">טוען...</div>
           <div id="clock-date">--/--/----</div>
@@ -436,9 +435,12 @@ function applyRss() {
     `<span class="ticker-item">${escHtml(text)}</span><span class="ticker-dot">●</span>`
   ).join('');
   const total = rss.items.join(' ● ').length;
-  const speed = rss.speed || 60;
+  const speed = rss.speed || 30;
   const dur   = Math.max(30, total / speed * 2);
-  track.style.animationDuration = dur + 's';
+  // Force animation restart so it always runs after content update
+  track.style.animation = 'none';
+  track.offsetHeight; // trigger reflow
+  track.style.animation = `tickerScroll ${dur}s linear infinite`;
 }
 
 // ── Music ─────────────────────────────────────────────────────────
@@ -484,9 +486,7 @@ function updateClock() {
   const now = new Date();
   const hh  = String(now.getHours()).padStart(2,'0');
   const mm  = String(now.getMinutes()).padStart(2,'0');
-  const ss  = String(now.getSeconds()).padStart(2,'0');
-  document.getElementById('clock-time').childNodes[0].nodeValue = hh + ':' + mm;
-  document.getElementById('clock-seconds').textContent = ':' + ss;
+  document.getElementById('clock-time').textContent = hh + ':' + mm;
   document.getElementById('clock-day').textContent = 'יום ' + DAYS[now.getDay()];
   document.getElementById('clock-date').textContent =
     String(now.getDate()).padStart(2,'0') + '/' +

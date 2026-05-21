@@ -41,7 +41,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS rss_config (
     id      INTEGER PRIMARY KEY DEFAULT 1,
     sources TEXT    DEFAULT '["ynet_all"]',
-    speed   INTEGER DEFAULT 60,
+    speed   INTEGER DEFAULT 30,
     enabled INTEGER DEFAULT 1
   );
   INSERT OR IGNORE INTO rss_config (id) VALUES (1);
