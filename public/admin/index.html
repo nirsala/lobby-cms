@@ -538,25 +538,7 @@ nav{padding:12px 0;flex:1;}
     <div class="page" id="page-settings">
       <div class="page-header">
         <div class="page-title"><span>הגדרות</span> כלליות</div>
-        <div class="page-sub">לוגו, כותרת תצוגה והגדרות מערכת</div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          לוגו
-        </div>
-        <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-          <div id="logo-preview" style="width:160px;height:80px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
-            <span style="color:var(--muted);font-size:.8rem;">אין לוגו</span>
-          </div>
-          <div>
-            <div class="upload-zone" style="padding:16px 24px;width:auto;display:inline-block;position:relative;">
-              <input type="file" id="logo-file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;"/>
-              <span style="font-size:.85rem;"><strong>בחר תמונה</strong> — PNG/JPG שקוף מומלץ</span>
-            </div>
-          </div>
-        </div>
+        <div class="page-sub">כותרת תצוגה, כתובת הבניין והגדרות מערכת</div>
       </div>
 
       <div class="card">
@@ -961,11 +943,6 @@ async function loadSettings() {
   document.getElementById('xibo-client-id').value = s.xibo_client_id || '';
   document.getElementById('xibo-secret').value    = s.xibo_client_secret || '';
 
-  if (s.logo_filename) {
-    document.getElementById('logo-preview').innerHTML =
-      `<img src="/uploads/${s.logo_filename}" style="max-width:100%;max-height:100%;object-fit:contain;"/>`;
-  }
-
   const base = location.origin;
   const url  = base + '/display/';
   document.getElementById('display-url').textContent = url;
@@ -985,18 +962,6 @@ async function saveSettings() {
   });
   toast('הגדרות נשמרו');
 }
-
-document.getElementById('logo-file').addEventListener('change', async (e) => {
-  if (!e.target.files[0]) return;
-  const fd = new FormData();
-  fd.append('logo', e.target.files[0]);
-  try {
-    const r = await api('POST', '/logo', fd);
-    document.getElementById('logo-preview').innerHTML =
-      `<img src="/uploads/${r.filename}?t=${Date.now()}" style="max-width:100%;max-height:100%;object-fit:contain;"/>`;
-    toast('לוגו עודכן');
-  } catch(e) { toast('שגיאה בהעלאת לוגו','err'); }
-});
 
 function copyDisplayUrl() {
   const url = document.getElementById('display-url').textContent;

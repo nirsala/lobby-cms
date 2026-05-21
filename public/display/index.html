@@ -100,43 +100,6 @@ html,body{
   font-size:.9rem;color:var(--red);font-weight:600;margin-top:6px;
 }
 
-/* News section */
-#news-section{
-  flex:1;display:flex;flex-direction:column;overflow:hidden;
-  padding:0;
-}
-#news-header{
-  padding:10px 16px;
-  font-size:.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;
-  color:var(--red);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:6px;flex-shrink:0;
-  background:rgba(215,29,67,0.05);
-}
-#news-scroll-wrap{
-  flex:1;overflow:hidden;position:relative;
-  mask:linear-gradient(to bottom,transparent 0%,black 12%,black 88%,transparent 100%);
-}
-#news-track{
-  display:flex;flex-direction:column;
-  animation:newsScroll linear infinite;
-  animation-duration:var(--news-dur,40s);
-}
-@keyframes newsScroll{
-  from{transform:translateY(0)}
-  to  {transform:translateY(-50%)}
-}
-.news-item{
-  padding:10px 16px;
-  border-bottom:1px solid rgba(255,255,255,0.04);
-  font-size:.8rem;line-height:1.45;
-  color:rgba(255,255,255,0.8);
-  cursor:default;
-  flex-shrink:0;
-}
-.news-item::before{
-  content:'•';color:var(--red);margin-left:6px;font-size:.9rem;
-}
-
 /* Address at bottom of left col */
 #left-address{
   padding:10px 16px;
@@ -167,36 +130,21 @@ html,body{
 #media-empty svg{opacity:.25;}
 #media-empty p{font-size:1rem;letter-spacing:2px;text-transform:uppercase;}
 
-/* ── RIGHT COLUMN (Messages) ─── */
-#right-col{
-  width:270px;flex-shrink:0;
-  background:var(--panel);
-  border-right:1px solid var(--border);
-  display:flex;flex-direction:column;
-  overflow:hidden;
-  position:relative;
-}
-#right-col::before{
-  content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
-  background:linear-gradient(to bottom,transparent,var(--blue-light),transparent);
-  opacity:.25;
-}
+/* ── MESSAGES (left column) ─── */
 #msgs-header{
-  padding:12px 16px;
+  padding:10px 16px;
   font-size:.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;
-  color:var(--blue-light);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:8px;flex-shrink:0;
-  background:rgba(59,130,246,0.06);
+  color:var(--red);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:6px;flex-shrink:0;
+  background:rgba(215,29,67,0.05);
 }
 #msgs-scroll-wrap{
   flex:1;overflow:hidden;position:relative;
-  mask:linear-gradient(to bottom,transparent 0%,black 8%,black 92%,transparent 100%);
+  mask:linear-gradient(to bottom,transparent 0%,black 12%,black 88%,transparent 100%);
 }
 #msgs-track{
   display:flex;flex-direction:column;gap:12px;
   padding:16px 12px;
-  animation:msgsScroll linear infinite;
-  animation-duration:var(--msgs-dur,30s);
 }
 @keyframes msgsScroll{
   from{transform:translateY(0)}
@@ -205,7 +153,7 @@ html,body{
 .msg-bubble{
   background:rgba(255,255,255,0.04);
   border:1px solid rgba(255,255,255,0.08);
-  border-right:3px solid var(--blue-light);
+  border-right:3px solid var(--red);
   border-radius:0 12px 12px 0;
   padding:12px 14px;
   flex-shrink:0;
@@ -292,13 +240,15 @@ html,body{
         </div>
       </div>
 
-      <div id="news-section">
-        <div id="news-header">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11a9 9 0 019 9"/><path d="M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg>
-          חדשות
+      <div id="msgs-section" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+        <div id="msgs-header">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          הודעות לדיירים
         </div>
-        <div id="news-scroll-wrap">
-          <div id="news-track"><div class="news-item" style="color:var(--muted)">טוען חדשות...</div></div>
+        <div id="msgs-scroll-wrap">
+          <div id="msgs-track">
+            <div id="msgs-empty">אין הודעות כרגע</div>
+          </div>
         </div>
       </div>
 
@@ -316,18 +266,6 @@ html,body{
       </div>
     </div>
 
-    <!-- RIGHT COLUMN: MESSAGES -->
-    <div id="right-col">
-      <div id="msgs-header">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        הודעות לדיירים
-      </div>
-      <div id="msgs-scroll-wrap">
-        <div id="msgs-track">
-          <div id="msgs-empty">אין הודעות כרגע</div>
-        </div>
-      </div>
-    </div>
 
   </div>
 
@@ -438,62 +376,69 @@ function scheduleNextSlide() {
 
 // ── Messages ──────────────────────────────────────────────────────
 function applyMessages() {
+  const wrap  = document.getElementById('msgs-scroll-wrap');
   const track = document.getElementById('msgs-track');
   const msgs  = (state.messages || []).filter(m => m.active);
 
+  function makeBubbles(arr) {
+    return arr.map(m => {
+      const time = m.created_at
+        ? new Date(m.created_at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})
+        : '';
+      return `<div class="msg-bubble">
+        <div class="msg-bubble-text" style="color:${m.color||'#fff'};font-size:${m.font_size||22}px">${escHtml(m.text)}</div>
+        ${time ? `<div class="msg-bubble-footer"><span class="msg-bubble-time">${time}</span></div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
   if (!msgs.length) {
     track.innerHTML = '<div id="msgs-empty" style="padding:24px 16px;text-align:center;color:var(--muted);font-size:.85rem;">אין הודעות כרגע</div>';
+    track.style.animation = 'none';
     return;
   }
 
-  // Duplicate for seamless scroll
-  const all = [...msgs, ...msgs];
-  track.innerHTML = all.map(m => {
-    const time = m.created_at
-      ? new Date(m.created_at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})
-      : '';
-    return `<div class="msg-bubble">
-      <div class="msg-bubble-text" style="color:${m.color||'#fff'};font-size:${m.font_size||22}px">${escHtml(m.text)}</div>
-      ${time ? `<div class="msg-bubble-footer"><span class="msg-bubble-time">${time}</span></div>` : ''}
-    </div>`;
-  }).join('');
-
   const dur = state.message_speed || Math.max(20, msgs.length * 8);
-  track.style.animationDuration = dur + 's';
+
+  // Render single set first, pause animation while measuring
+  track.innerHTML = makeBubbles(msgs);
+  track.style.animation = 'none';
+
+  // Two rAF frames ensure layout is fully computed before we measure
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const trackH = track.scrollHeight;
+    const wrapH  = wrap.clientHeight;
+    if (trackH > wrapH * 0.85) {
+      // Content taller than visible area — duplicate for seamless infinite scroll
+      track.innerHTML = makeBubbles([...msgs, ...msgs]);
+      track.style.animation = 'none';
+      track.offsetHeight; // force reflow so animation restarts cleanly
+      track.style.animation = `msgsScroll ${dur}s linear infinite`;
+    }
+    // else: everything fits in view — display statically, no scroll
+  }));
 }
 
 // ── RSS ───────────────────────────────────────────────────────────
 function applyRss() {
   const bar   = document.getElementById('ticker-bar');
   const track = document.getElementById('ticker-track');
-  const newsTrack = document.getElementById('news-track');
   const rss   = state.rss;
 
-  // Bottom ticker
   if (!rss?.enabled || !rss?.items?.length) {
     bar.style.display = 'none';
-  } else {
-    bar.style.display = 'flex';
-    const all = [...rss.items, ...rss.items];
-    track.innerHTML = all.map(text =>
-      `<span class="ticker-item">${escHtml(text)}</span><span class="ticker-dot">●</span>`
-    ).join('');
-    const total = rss.items.join(' ● ').length;
-    const speed = rss.speed || 60;
-    const dur   = Math.max(30, total / speed * 2);
-    track.style.animationDuration = dur + 's';
-  }
-
-  // Left column news list
-  const items = rss?.items || [];
-  if (!items.length) {
-    newsTrack.innerHTML = '<div class="news-item" style="color:var(--muted)">אין חדשות</div>';
     return;
   }
-  const allNews = [...items, ...items];
-  newsTrack.innerHTML = allNews.map(t => `<div class="news-item">${escHtml(t)}</div>`).join('');
-  const newsDur = Math.max(20, items.length * 4);
-  newsTrack.style.animationDuration = newsDur + 's';
+
+  bar.style.display = 'flex';
+  const all = [...rss.items, ...rss.items];
+  track.innerHTML = all.map(text =>
+    `<span class="ticker-item">${escHtml(text)}</span><span class="ticker-dot">●</span>`
+  ).join('');
+  const total = rss.items.join(' ● ').length;
+  const speed = rss.speed || 60;
+  const dur   = Math.max(30, total / speed * 2);
+  track.style.animationDuration = dur + 's';
 }
 
 // ── Music ─────────────────────────────────────────────────────────
@@ -503,17 +448,22 @@ function applyMusic() {
   const music  = state.music;
 
   if (!music?.enabled || !music?.files?.length) { player.pause(); return; }
-  player.volume = (music.volume || 30) / 100;
 
-  const urls    = music.files.map(f => f.url);
+  const vol  = (music.volume || 30) / 100;
+  const urls = music.files.map(f => f.url);
   let currentIdx = 0;
 
   function playIdx(i) {
     currentIdx = ((i % urls.length) + urls.length) % urls.length;
     src.src = urls[currentIdx];
     player.load();
-    player.play().catch(() => {
-      document.addEventListener('click', () => player.play(), { once: true });
+    // Set volume after load — browsers may reset it on load()
+    player.addEventListener('canplay', function onCanPlay() {
+      player.removeEventListener('canplay', onCanPlay);
+      player.volume = vol;
+      player.play().catch(() => {
+        document.addEventListener('click', () => { player.volume = vol; player.play(); }, { once: true });
+      });
     });
   }
 
@@ -523,7 +473,8 @@ function applyMusic() {
     player.onended = () => playIdx(currentIdx + 1);
     playIdx(0);
   } else {
-    player.volume = (music.volume || 30) / 100;
+    // Playlist unchanged — just update volume live
+    player.volume = vol;
   }
 }
 
