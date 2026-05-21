@@ -153,7 +153,7 @@ router.get('/display/state', async (req, res) => {
     clock: { time: now.toTimeString().slice(0,8), date: fullDate, day: dayName, hebrew: hebDate },
     media: activeMedia.map(m => ({ ...m, url: '/uploads/' + m.filename })),
     messages: messages,
-    message_speed: parseInt(settings.message_scroll_speed) || 40,
+    message_speed: parseInt(settings.message_scroll_speed) || 72,
     rss: { items: rssItems, speed: rssCfg?.speed || 60, enabled: !!rssCfg?.enabled },
     music: {
       enabled: !!musicCfg?.enabled,

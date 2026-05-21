@@ -711,7 +711,7 @@ async function addMessage() {
 
 async function loadMessages() {
   const s = await api('GET', '/settings');
-  const spd = s.message_scroll_speed || 40;
+  const spd = s.message_scroll_speed || 72;
   document.getElementById('msg-speed').value = spd;
   document.getElementById('msg-speed-val').textContent = spd;
   const msgs = await api('GET', '/messages');

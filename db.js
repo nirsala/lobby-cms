@@ -85,6 +85,9 @@ const insertSetting = db.prepare(
 );
 for (const [k, v] of Object.entries(defaults)) insertSetting.run(k, v);
 
+// Migrate old default values to updated defaults
+db.prepare(`UPDATE settings SET value='72' WHERE key='message_scroll_speed' AND value='40'`).run();
+
 // ── Helpers ──────────────────────────────────────────────────────
 const get  = (table, where = '', params = []) =>
   db.prepare(`SELECT * FROM ${table}${where ? ' WHERE ' + where : ''}`).all(...params);
