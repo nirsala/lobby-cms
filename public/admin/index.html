@@ -58,13 +58,6 @@ nav{padding:12px 0;flex:1;}
   color:rgba(255,255,255,.2);padding:14px 20px 6px;
 }
 
-/* Status dot */
-.xibo-status{
-  margin:0 12px 12px;padding:10px 14px;border-radius:8px;
-  background:var(--bg3);border:1px solid var(--border);
-  font-size:.75rem;color:var(--muted);
-  display:flex;align-items:center;gap:8px;
-}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--muted);}
 .dot.online{background:var(--green);}
 .dot.offline{background:var(--red);}
@@ -190,14 +183,6 @@ nav{padding:12px 0;flex:1;}
   transform:scale(var(--preview-scale,0.5));
 }
 
-/* ── XIBO ── */
-.xibo-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;}
-.xibo-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:5px 12px;border-radius:20px;
-  background:rgba(0,217,126,.1);border:1px solid rgba(0,217,126,.25);
-  font-size:.75rem;font-weight:700;color:var(--green);
-}
 
 /* ── TOASTS ── */
 #toasts{position:fixed;bottom:20px;left:20px;z-index:999;display:flex;flex-direction:column;gap:8px;}
@@ -215,7 +200,7 @@ nav{padding:12px 0;flex:1;}
 /* ── RESPONSIVE ── */
 @media(max-width:768px){
   #sidebar{width:64px;overflow:hidden;}
-  .nav-item span,.sidebar-logo-text,.sidebar-logo-sub,.nav-section,.xibo-status span{display:none;}
+  .nav-item span,.sidebar-logo-text,.sidebar-logo-sub,.nav-section{display:none;}
   .page{padding:20px 16px;}
   .form-row{grid-template-columns:1fr;}
 }
@@ -258,20 +243,12 @@ nav{padding:12px 0;flex:1;}
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         <span>הגדרות</span>
       </div>
-      <div class="nav-item" data-page="xibo">
-        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        <span>Xibo</span>
-      </div>
       <div class="nav-item" data-page="preview">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
         <span>תצוגה מקדימה</span>
       </div>
     </nav>
 
-    <div class="xibo-status" id="xibo-status-indicator">
-      <div class="dot" id="xibo-dot"></div>
-      <span id="xibo-status-text">Xibo</span>
-    </div>
   </div>
 
   <!-- ═══════ MAIN ═══════ -->
@@ -565,74 +542,12 @@ nav{padding:12px 0;flex:1;}
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           קישור מסך תצוגה
         </div>
-        <p style="font-size:.85rem;color:var(--muted);margin-bottom:12px;">כתובת ה-URL לשדור על מסכי הלובי (הכנס ב-Xibo כ-Webpage)</p>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:12px;">כתובת ה-URL לשידור על מסכי הלובי</p>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
           <code id="display-url" style="background:var(--bg3);padding:10px 16px;border-radius:8px;font-size:.85rem;color:var(--green);letter-spacing:.5px;"></code>
           <button class="btn btn-outline btn-sm" onclick="copyDisplayUrl()">העתק</button>
           <a id="display-link" href="#" target="_blank" class="btn btn-outline btn-sm">פתח בחלון חדש ↗</a>
         </div>
-      </div>
-    </div>
-
-    <!-- ── XIBO PAGE ── -->
-    <div class="page" id="page-xibo">
-      <div class="page-header">
-        <div class="page-title">אינטגרציית <span>Xibo</span></div>
-        <div class="page-sub">חבר את הלובי CMS למערכת Xibo שלך</div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">
-          <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-          הגדרות חיבור Xibo
-        </div>
-        <div class="form-row">
-          <div class="form-group form-full">
-            <label>Xibo CMS URL</label>
-            <input type="url" id="xibo-url" placeholder="https://your-xibo.example.com"/>
-          </div>
-          <div class="form-group">
-            <label>Client ID</label>
-            <input type="text" id="xibo-client-id" placeholder="client_id מ-Admin > Applications"/>
-          </div>
-          <div class="form-group">
-            <label>Client Secret</label>
-            <input type="password" id="xibo-secret" placeholder="client_secret"/>
-          </div>
-        </div>
-        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn btn-primary" onclick="saveXiboSettings()">שמור פרטים</button>
-          <button class="btn btn-outline" onclick="testXibo()">בדוק חיבור</button>
-        </div>
-        <div id="xibo-test-result" style="margin-top:12px;font-size:.85rem;"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">
-          <svg viewBox="0 0 24 24"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          פרסם ל-Xibo
-        </div>
-        <p style="font-size:.875rem;color:var(--muted);margin-bottom:16px;line-height:1.7;">
-          לחץ כדי ליצור אוטומטית Layout ב-Xibo עם ה-Webpage widget שמצביע על מסך הלובי שלך.
-          אם Layout כבר קיים — הוא יתעדכן.
-        </p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-          <button class="btn btn-primary" onclick="pushToXibo()">
-            <svg viewBox="0 0 24 24"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            פרסם Layout ב-Xibo
-          </button>
-          <div id="xibo-layout-badge" style="display:none;"></div>
-        </div>
-        <div id="xibo-push-result" style="margin-top:14px;font-size:.85rem;"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">
-          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          מסכים מחוברים
-        </div>
-        <button class="btn btn-outline btn-sm" onclick="loadXiboDisplays()" style="margin-bottom:12px;">רענן רשימה</button>
-        <div id="xibo-displays-list" style="font-size:.85rem;color:var(--muted);">לחץ "רענן" לטעינת מסכים</div>
       </div>
     </div>
 
@@ -939,20 +854,11 @@ async function loadSettings() {
   const s = await api('GET', '/settings');
   document.getElementById('display-title').value    = s.display_title || 'ברוכים הבאים';
   document.getElementById('building-address').value = s.building_address || '';
-  document.getElementById('xibo-url').value       = s.xibo_url || '';
-  document.getElementById('xibo-client-id').value = s.xibo_client_id || '';
-  document.getElementById('xibo-secret').value    = s.xibo_client_secret || '';
-
   const base = location.origin;
   const url  = base + '/display/';
   document.getElementById('display-url').textContent = url;
   document.getElementById('display-link').href = url;
 
-  if (s.xibo_layout_id) {
-    document.getElementById('xibo-layout-badge').style.display = 'inline-flex';
-    document.getElementById('xibo-layout-badge').innerHTML =
-      `<span class="xibo-badge">✓ Layout #${s.xibo_layout_id}</span>`;
-  }
 }
 
 async function saveSettings() {
@@ -966,69 +872,6 @@ async function saveSettings() {
 function copyDisplayUrl() {
   const url = document.getElementById('display-url').textContent;
   navigator.clipboard.writeText(url).then(() => toast('הכתובת הועתקה'));
-}
-
-// ══ XIBO ═════════════════════════════════════════════════════════
-async function saveXiboSettings() {
-  await api('PUT', '/settings', {
-    xibo_url          : document.getElementById('xibo-url').value,
-    xibo_client_id    : document.getElementById('xibo-client-id').value,
-    xibo_client_secret: document.getElementById('xibo-secret').value,
-  });
-  toast('פרטי Xibo נשמרו');
-  checkXiboStatus();
-}
-
-async function testXibo() {
-  const result = document.getElementById('xibo-test-result');
-  result.textContent = 'בודק חיבור...';
-  try {
-    const r = await api('GET', '/xibo/status');
-    result.innerHTML = r.connected
-      ? `<span style="color:var(--green)">✓ מחובר ל-Xibo ${r.version||''}</span>`
-      : `<span style="color:var(--red)">✗ ${r.error}</span>`;
-  } catch(e) { result.innerHTML = `<span style="color:var(--red)">✗ ${e.message}</span>`; }
-}
-
-async function pushToXibo() {
-  document.getElementById('xibo-push-result').textContent = 'שולח ל-Xibo...';
-  try {
-    const r = await api('POST', '/xibo/push', { display_url: location.origin + '/display/' });
-    document.getElementById('xibo-push-result').innerHTML =
-      `<span style="color:var(--green)">✓ ${r.message}</span><br><small style="color:var(--muted)">Display URL: ${r.displayUrl}</small>`;
-    document.getElementById('xibo-layout-badge').style.display='inline-flex';
-    document.getElementById('xibo-layout-badge').innerHTML =
-      `<span class="xibo-badge">✓ Layout #${r.layoutId}</span>`;
-    toast('Layout פורסם ב-Xibo');
-  } catch(e) {
-    document.getElementById('xibo-push-result').innerHTML = `<span style="color:var(--red)">✗ ${e.message}</span>`;
-    toast('שגיאה: ' + e.message,'err');
-  }
-}
-
-async function loadXiboDisplays() {
-  try {
-    const displays = await api('GET', '/xibo/displays');
-    const list = document.getElementById('xibo-displays-list');
-    if (!displays?.length) { list.textContent = 'לא נמצאו מסכים'; return; }
-    list.innerHTML = displays.slice(0,20).map(d =>
-      `<div style="padding:8px 12px;background:var(--bg2);border-radius:6px;margin-bottom:6px;display:flex;align-items:center;gap:10px;">
-        <span class="dot ${d.licensed?'online':'offline'}"></span>
-        <span style="font-size:.85rem;">${esc(d.display||d.displayId)}</span>
-        <span style="font-size:.75rem;color:var(--muted);margin-right:auto;">${d.status===1?'מחובר':'מנותק'}</span>
-      </div>`
-    ).join('');
-  } catch(e) { document.getElementById('xibo-displays-list').textContent = 'שגיאה: ' + e.message; }
-}
-
-async function checkXiboStatus() {
-  try {
-    const r = await api('GET', '/xibo/status');
-    const dot  = document.getElementById('xibo-dot');
-    const text = document.getElementById('xibo-status-text');
-    dot.className  = 'dot ' + (r.connected ? 'online' : 'offline');
-    text.textContent = r.connected ? 'Xibo מחובר' : 'Xibo לא מחובר';
-  } catch { }
 }
 
 // ══ PREVIEW ══════════════════════════════════════════════════════
@@ -1052,8 +895,6 @@ function esc(s) {
 // ══ Init ══════════════════════════════════════════════════════════
 async function init() {
   await Promise.all([ loadMedia(), loadMessages(), loadRss(), loadMusic(), loadSettings() ]);
-  checkXiboStatus();
-  setInterval(checkXiboStatus, 60000);
 }
 
 init();
