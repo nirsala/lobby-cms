@@ -78,7 +78,7 @@ const defaults = {
   xibo_client_id: '',
   xibo_client_secret: '',
   xibo_layout_id: '',
-  message_scroll_speed: '40',
+  message_scroll_speed: '72',
 };
 const insertSetting = db.prepare(
   `INSERT OR IGNORE INTO settings(key,value) VALUES (?,?)`
