@@ -568,6 +568,11 @@ nav{padding:12px 0;flex:1;}
           <label>כותרת לובי (מוצגת בכותרת הדפדפן)</label>
           <input type="text" id="display-title" value="ברוכים הבאים"/>
         </div>
+        <div class="form-group" style="max-width:400px;margin-top:16px;">
+          <label>כתובת הבניין</label>
+          <input type="text" id="building-address" placeholder="לדוגמה: רחוב הרצל 12, תל אביב"/>
+          <p style="font-size:.75rem;color:var(--muted);margin-top:6px;">מוצגת בתחתית הפאנל הימני במסך הלובי</p>
+        </div>
         <div style="margin-top:16px;">
           <button class="btn btn-primary" onclick="saveSettings()">שמור הגדרות</button>
         </div>
@@ -950,7 +955,8 @@ async function saveMusicConfig() {
 // ══ SETTINGS ═════════════════════════════════════════════════════
 async function loadSettings() {
   const s = await api('GET', '/settings');
-  document.getElementById('display-title').value = s.display_title || 'ברוכים הבאים';
+  document.getElementById('display-title').value    = s.display_title || 'ברוכים הבאים';
+  document.getElementById('building-address').value = s.building_address || '';
   document.getElementById('xibo-url').value       = s.xibo_url || '';
   document.getElementById('xibo-client-id').value = s.xibo_client_id || '';
   document.getElementById('xibo-secret').value    = s.xibo_client_secret || '';
@@ -974,7 +980,8 @@ async function loadSettings() {
 
 async function saveSettings() {
   await api('PUT', '/settings', {
-    display_title: document.getElementById('display-title').value,
+    display_title    : document.getElementById('display-title').value,
+    building_address : document.getElementById('building-address').value,
   });
   toast('הגדרות נשמרו');
 }

@@ -37,8 +37,26 @@ html,body{
   background:var(--panel);
   border-left:1px solid var(--border);
   display:flex;flex-direction:column;
-  align-items:center;padding:28px 16px;
+  align-items:center;padding:28px 16px 20px;
   gap:24px;position:relative;z-index:2;
+}
+#building-address{
+  margin-top:auto;
+  width:100%;
+  text-align:center;
+  padding:12px 8px;
+  border-top:1px solid rgba(255,255,255,0.06);
+  display:none;
+}
+#building-address-icon{
+  font-size:.75rem;color:var(--red);
+  letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:5px;
+}
+#building-address-text{
+  font-size:.82rem;font-weight:500;
+  color:rgba(255,255,255,0.55);
+  line-height:1.5;word-break:break-word;
 }
 #left-panel::after{
   content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
@@ -217,6 +235,12 @@ html,body{
       <div id="messages-panel" style="display:none">
         <div id="messages-track"></div>
       </div>
+
+      <!-- Building address — pinned to bottom -->
+      <div id="building-address">
+        <div id="building-address-icon">📍 כתובת</div>
+        <div id="building-address-text"></div>
+      </div>
     </div>
 
     <!-- CONTENT AREA -->
@@ -269,10 +293,24 @@ async function loadState() {
 function applyState() {
   if (!state) return;
   applyLogo();
+  applyAddress();
   applyMedia();
   applyMessages();
   applyRss();
   applyMusic();
+}
+
+// ── Building address ──────────────────────────────────────────────
+function applyAddress() {
+  const addr = state.settings?.building_address || '';
+  const wrap = document.getElementById('building-address');
+  const text = document.getElementById('building-address-text');
+  if (addr.trim()) {
+    text.textContent = addr;
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+  }
 }
 
 // ── Logo ──────────────────────────────────────────────────────────

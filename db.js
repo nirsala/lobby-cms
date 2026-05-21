@@ -71,7 +71,8 @@ db.exec(`
 
 // Seed default settings
 const defaults = {
-  display_title : 'ברוכים הבאים',
+  display_title    : 'ברוכים הבאים',
+  building_address : '',
   logo_filename : '',
   xibo_url      : '',
   xibo_client_id: '',
