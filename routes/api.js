@@ -43,7 +43,7 @@ const MUSIC_GENRES = {
 
 // ── RSS cache ───────────────────────────────────────────────────
 let rssCache = { items: [], ts: 0 };
-const RSS_TTL = 5 * 60 * 1000; // 5 min
+const RSS_TTL = 60 * 60 * 1000; // 1 hour
 
 async function fetchRss(sourceKeys) {
   if (Date.now() - rssCache.ts < RSS_TTL && rssCache.items.length) return rssCache.items;
