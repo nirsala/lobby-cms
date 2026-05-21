@@ -111,14 +111,14 @@ html,body{
 
 /* ── MESSAGES OVERLAY ────────────────────── */
 #messages-panel{
-  position:absolute;
-  bottom:0;left:0;
-  width:320px;
-  height:60%;
+  width:100%;
+  flex:1;
+  min-height:0;
   overflow:hidden;
   pointer-events:none;
   mask:linear-gradient(to top,rgba(0,0,0,1) 60%,transparent 100%);
-  padding:0 0 12px 0;
+  padding:0 0 8px 0;
+  align-self:stretch;
 }
 #messages-track{
   display:flex;flex-direction:column;gap:12px;
@@ -131,14 +131,15 @@ html,body{
   to  {transform:translateY(-50%)}
 }
 .message-item{
-  padding:12px 18px;
+  padding:10px 14px;
   background:rgba(0,0,0,.72);
   backdrop-filter:blur(8px);
   border-right:3px solid var(--red);
   border-radius:0 8px 8px 0;
-  font-size:1.1rem;font-weight:600;
+  font-size:1rem;font-weight:600;
   line-height:1.5;
-  max-width:300px;
+  width:100%;
+  box-sizing:border-box;
   word-break:break-word;
 }
 
@@ -162,12 +163,13 @@ html,body{
 #ticker-track-wrap{flex:1;overflow:hidden;}
 #ticker-track{
   display:inline-flex;gap:80px;white-space:nowrap;
+  direction:ltr;
   animation:tickerScroll linear infinite;
   animation-duration:var(--ticker-dur,60s);
 }
 @keyframes tickerScroll{
-  from{transform:translateX(0)}
-  to  {transform:translateX(-50%)}
+  from{transform:translateX(-50%)}
+  to  {transform:translateX(0)}
 }
 .ticker-item{
   font-size:.9rem;color:rgba(255,255,255,.85);
@@ -181,7 +183,6 @@ html,body{
 @media(max-width:1280px){
   #left-panel{width:200px;}
   #clock-time{font-size:2.4rem;}
-  #messages-panel{width:260px;}
 }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
@@ -210,6 +211,11 @@ html,body{
       <div class="divider"></div>
 
       <div id="clock-hebrew"></div>
+
+      <div class="divider" id="msgs-divider" style="display:none"></div>
+      <div id="messages-panel" style="display:none">
+        <div id="messages-track"></div>
+      </div>
     </div>
 
     <!-- CONTENT AREA -->
@@ -223,10 +229,6 @@ html,body{
         </div>
       </div>
 
-      <!-- Scrolling messages overlay -->
-      <div id="messages-panel" style="display:none">
-        <div id="messages-track"></div>
-      </div>
 
     </div>
   </div>
@@ -342,12 +344,18 @@ function scheduleNextSlide() {
 
 // ── Messages ──────────────────────────────────────────────────────
 function applyMessages() {
-  const panel = document.getElementById('messages-panel');
-  const track = document.getElementById('messages-track');
-  const msgs  = (state.messages || []).filter(m => m.active);
+  const panel  = document.getElementById('messages-panel');
+  const track  = document.getElementById('messages-track');
+  const divider = document.getElementById('msgs-divider');
+  const msgs   = (state.messages || []).filter(m => m.active);
 
-  if (!msgs.length) { panel.style.display = 'none'; return; }
+  if (!msgs.length) {
+    panel.style.display = 'none';
+    if (divider) divider.style.display = 'none';
+    return;
+  }
   panel.style.display = 'block';
+  if (divider) divider.style.display = 'block';
   track.innerHTML = '';
 
   // Duplicate for seamless loop
