@@ -1,5 +1,5 @@
 /**
- * routes/auth.js — Authentication via Xibo credentials
+ * routes/auth.js — Authentication via Xibo OAuth2 Authorization Code flow
  */
 const express = require('express');
 const crypto  = require('crypto');
@@ -7,69 +7,94 @@ const fetch   = require('node-fetch');
 
 const router  = express.Router();
 
-// In-memory session store: token → { username, xiboToken, expiresAt }
+// In-memory session store: token → { xiboToken, expiresAt }
 const sessions = new Map();
+const SESSION_TTL = 8 * 60 * 60 * 1000;
 
-const SESSION_TTL = 8 * 60 * 60 * 1000; // 8 hours
-
-function cleanExpired() {
+setInterval(() => {
   const now = Date.now();
   for (const [token, s] of sessions) {
     if (now > s.expiresAt) sessions.delete(token);
   }
-}
-setInterval(cleanExpired, 10 * 60 * 1000);
+}, 10 * 60 * 1000);
 
 function getXiboConfig() {
+  const url = (process.env.XIBO_URL || '').replace(/\/+$/, '');
   return {
-    url          : (process.env.XIBO_URL || '').replace(/\/+$/, ''),
+    url,
     clientId     : process.env.XIBO_CLIENT_ID || '',
     clientSecret : process.env.XIBO_CLIENT_SECRET || '',
+    redirectUri  : `${url.replace('https://', 'http://').split('/')[0]}//${url.split('//')[1]?.split('/')[0]?.replace(':443', '')}`,
   };
 }
 
-// POST /api/auth/login  { username, password }
-router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password)
-    return res.status(400).json({ error: 'שם משתמש וסיסמא נדרשים' });
+function getRedirectUri(req) {
+  const proto = req.headers['x-forwarded-proto'] || req.protocol;
+  const host  = req.headers['x-forwarded-host'] || req.headers.host;
+  return `${proto}://${host}/api/auth/callback`;
+}
 
+// GET /api/auth/login — redirect to Xibo login page
+router.get('/login', (req, res) => {
+  const cfg   = getXiboConfig();
+  const state = crypto.randomBytes(16).toString('hex');
+  const redirectUri = getRedirectUri(req);
+
+  // Store state temporarily to verify on callback
+  res.cookie('xibo_state', state, { httpOnly: true, maxAge: 300000, sameSite: 'lax' });
+
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id    : cfg.clientId,
+    redirect_uri : redirectUri,
+    state,
+  });
+
+  res.redirect(`${cfg.url}/api/authorize?${params}`);
+});
+
+// GET /api/auth/callback — Xibo redirects back here with ?code=...
+router.get('/callback', async (req, res) => {
+  const { code, state } = req.query;
   const cfg = getXiboConfig();
-  if (!cfg.url || !cfg.clientId || !cfg.clientSecret)
-    return res.status(500).json({ error: 'Xibo לא מוגדר בשרת' });
+  const redirectUri = getRedirectUri(req);
+
+  if (!code) {
+    return res.redirect('/admin/?error=' + encodeURIComponent(req.query.error || 'no_code'));
+  }
 
   try {
-    const authRes = await fetch(cfg.url + '/api/authorize/access_token', {
+    const tokenRes = await fetch(cfg.url + '/api/authorize/access_token', {
       method : 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body   : new URLSearchParams({
-        grant_type   : 'password',
+        grant_type   : 'authorization_code',
+        code,
         client_id    : cfg.clientId,
         client_secret: cfg.clientSecret,
-        username,
-        password,
+        redirect_uri : redirectUri,
       }),
       timeout: 10000,
     });
 
-    if (!authRes.ok) {
-      const text = await authRes.text();
-      if (authRes.status === 401 || authRes.status === 400)
-        return res.status(401).json({ error: 'שם משתמש או סיסמא שגויים' });
-      return res.status(502).json({ error: 'שגיאת חיבור ל-Xibo' });
+    if (!tokenRes.ok) {
+      const err = await tokenRes.text();
+      console.error('Xibo token exchange failed:', err);
+      return res.redirect('/admin/?error=auth_failed');
     }
 
-    const data = await authRes.json();
+    const data = await tokenRes.json();
     const sessionToken = crypto.randomBytes(32).toString('hex');
+
     sessions.set(sessionToken, {
-      username,
       xiboToken: data.access_token,
       expiresAt: Date.now() + SESSION_TTL,
     });
 
-    res.json({ token: sessionToken, username });
+    res.redirect(`/admin/?token=${sessionToken}`);
   } catch (e) {
-    res.status(502).json({ error: 'לא ניתן להתחבר ל-Xibo: ' + e.message });
+    console.error('Auth callback error:', e.message);
+    res.redirect('/admin/?error=connection_failed');
   }
 });
 
@@ -88,7 +113,7 @@ router.get('/me', (req, res) => {
     sessions.delete(token);
     return res.status(401).json({ error: 'unauthorized' });
   }
-  res.json({ username: session.username });
+  res.json({ ok: true });
 });
 
 // Middleware: protect routes behind auth
@@ -100,7 +125,6 @@ function requireAuth(req, res, next) {
     return res.status(401).json({ error: 'unauthorized' });
   }
   req.xiboToken = session.xiboToken;
-  req.xiboUser  = session.username;
   next();
 }
 

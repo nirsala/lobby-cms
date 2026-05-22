@@ -39,14 +39,6 @@ input,textarea,select{font-family:'Heebo',sans-serif;}
 }
 #login-box h1{font-size:1.4rem;font-weight:800;margin-bottom:4px;}
 #login-box .login-sub{font-size:.85rem;color:var(--muted);margin-bottom:28px;}
-#login-box .form-group{text-align:right;margin-bottom:14px;}
-#login-box .form-group label{font-size:.78rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px;}
-#login-box .form-group input{
-  width:100%;padding:12px 14px;
-  background:var(--bg2);border:1px solid var(--border2);border-radius:8px;
-  color:var(--text);font-size:.9rem;outline:none;transition:border-color .2s;
-}
-#login-box .form-group input:focus{border-color:var(--red);}
 #login-btn{
   width:100%;padding:13px;margin-top:8px;
   background:var(--red);color:#fff;border:none;border-radius:8px;
@@ -254,15 +246,7 @@ nav{padding:12px 0;flex:1;}
     <div class="login-logo">PL</div>
     <h1>Pixel Lobby</h1>
     <div class="login-sub">התחבר עם חשבון Xibo שלך</div>
-    <div class="form-group">
-      <label>שם משתמש</label>
-      <input type="text" id="login-username" placeholder="שם משתמש ב-Xibo" autocomplete="username"/>
-    </div>
-    <div class="form-group">
-      <label>סיסמא</label>
-      <input type="password" id="login-password" placeholder="סיסמא" autocomplete="current-password"/>
-    </div>
-    <button id="login-btn" onclick="doLogin()">התחבר</button>
+    <button id="login-btn" onclick="doLogin()">התחבר עם Xibo</button>
     <div id="login-error"></div>
   </div>
 </div>
@@ -644,44 +628,28 @@ let selectedFiles = [];
 let authToken = localStorage.getItem('lobby_token') || '';
 
 // ══ Auth ═════════════════════════════════════════════════════════
-document.getElementById('login-password').addEventListener('keydown', e => {
-  if (e.key === 'Enter') doLogin();
-});
-document.getElementById('login-username').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('login-password').focus();
-});
-
-async function doLogin() {
-  const username = document.getElementById('login-username').value.trim();
-  const password = document.getElementById('login-password').value;
-  const errEl    = document.getElementById('login-error');
-  const btn      = document.getElementById('login-btn');
-
-  if (!username || !password) { errEl.textContent = 'הזן שם משתמש וסיסמא'; return; }
-
-  btn.disabled = true;
-  btn.textContent = 'מתחבר...';
-  errEl.textContent = '';
-
-  try {
-    const res = await fetch(API + '/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'שגיאה');
-
-    authToken = data.token;
-    localStorage.setItem('lobby_token', authToken);
-    showApp();
-  } catch(e) {
-    errEl.textContent = e.message;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'התחבר';
-  }
+function doLogin() {
+  window.location.href = API + '/auth/login';
 }
+
+// Handle callback — token arrives as ?token=... in the URL
+(function handleCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const token  = params.get('token');
+  const error  = params.get('error');
+
+  if (token) {
+    authToken = token;
+    localStorage.setItem('lobby_token', authToken);
+    window.history.replaceState({}, '', '/admin/');
+  }
+  if (error) {
+    const errEl = document.getElementById('login-error');
+    const msgs  = { auth_failed: 'ההתחברות נכשלה', connection_failed: 'לא ניתן להתחבר ל-Xibo', no_code: 'שגיאה בתהליך ההתחברות' };
+    errEl.textContent = msgs[error] || 'שגיאה: ' + error;
+    window.history.replaceState({}, '', '/admin/');
+  }
+})();
 
 function logout() {
   fetch(API + '/auth/logout', {
