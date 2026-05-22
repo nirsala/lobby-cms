@@ -74,10 +74,6 @@ const defaults = {
   display_title    : 'ברוכים הבאים',
   building_address : '',
   logo_filename : '',
-  xibo_url      : '',
-  xibo_client_id: '',
-  xibo_client_secret: '',
-  xibo_layout_id: '',
   message_scroll_speed: '72',
 };
 const insertSetting = db.prepare(

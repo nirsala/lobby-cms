@@ -19,6 +19,46 @@ a{color:inherit;text-decoration:none;}
 button{font-family:'Heebo',sans-serif;cursor:pointer;}
 input,textarea,select{font-family:'Heebo',sans-serif;}
 
+/* ── LOGIN SCREEN ── */
+#login-screen{
+  position:fixed;inset:0;z-index:1000;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+}
+#login-screen.hidden{display:none;}
+#login-box{
+  width:380px;max-width:90vw;
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:40px 32px;text-align:center;
+}
+#login-box .login-logo{
+  width:56px;height:56px;border-radius:14px;
+  background:var(--red);display:inline-flex;align-items:center;justify-content:center;
+  font-size:.85rem;font-weight:900;color:#fff;letter-spacing:1px;
+  margin-bottom:16px;
+}
+#login-box h1{font-size:1.4rem;font-weight:800;margin-bottom:4px;}
+#login-box .login-sub{font-size:.85rem;color:var(--muted);margin-bottom:28px;}
+#login-box .form-group{text-align:right;margin-bottom:14px;}
+#login-box .form-group label{font-size:.78rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px;}
+#login-box .form-group input{
+  width:100%;padding:12px 14px;
+  background:var(--bg2);border:1px solid var(--border2);border-radius:8px;
+  color:var(--text);font-size:.9rem;outline:none;transition:border-color .2s;
+}
+#login-box .form-group input:focus{border-color:var(--red);}
+#login-btn{
+  width:100%;padding:13px;margin-top:8px;
+  background:var(--red);color:#fff;border:none;border-radius:8px;
+  font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .15s;
+}
+#login-btn:hover{opacity:.85;}
+#login-btn:disabled{opacity:.5;cursor:default;}
+#login-error{
+  margin-top:14px;font-size:.82rem;color:var(--red);
+  min-height:1.2em;
+}
+
 /* ── LAYOUT ── */
 #shell{display:flex;height:100vh;overflow:hidden;}
 
@@ -207,7 +247,27 @@ nav{padding:12px 0;flex:1;}
 </style>
 </head>
 <body>
-<div id="shell">
+
+<!-- ═══════ LOGIN SCREEN ═══════ -->
+<div id="login-screen">
+  <div id="login-box">
+    <div class="login-logo">PL</div>
+    <h1>Pixel Lobby</h1>
+    <div class="login-sub">התחבר עם חשבון Xibo שלך</div>
+    <div class="form-group">
+      <label>שם משתמש</label>
+      <input type="text" id="login-username" placeholder="שם משתמש ב-Xibo" autocomplete="username"/>
+    </div>
+    <div class="form-group">
+      <label>סיסמא</label>
+      <input type="password" id="login-password" placeholder="סיסמא" autocomplete="current-password"/>
+    </div>
+    <button id="login-btn" onclick="doLogin()">התחבר</button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<div id="shell" style="display:none">
 
   <!-- ═══════ SIDEBAR ═══════ -->
   <div id="sidebar">
@@ -248,6 +308,13 @@ nav{padding:12px 0;flex:1;}
         <span>תצוגה מקדימה</span>
       </div>
     </nav>
+
+    <div style="padding:12px 16px;border-top:1px solid var(--border);">
+      <button class="btn btn-outline btn-sm" onclick="logout()" style="width:100%;justify-content:center;">
+        <svg viewBox="0 0 24 24" style="width:15px;height:15px;"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>התנתק</span>
+      </button>
+    </div>
 
   </div>
 
@@ -574,6 +641,84 @@ nav{padding:12px 0;flex:1;}
 <script>
 const API = '/api';
 let selectedFiles = [];
+let authToken = localStorage.getItem('lobby_token') || '';
+
+// ══ Auth ═════════════════════════════════════════════════════════
+document.getElementById('login-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+document.getElementById('login-username').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('login-password').focus();
+});
+
+async function doLogin() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-error');
+  const btn      = document.getElementById('login-btn');
+
+  if (!username || !password) { errEl.textContent = 'הזן שם משתמש וסיסמא'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'מתחבר...';
+  errEl.textContent = '';
+
+  try {
+    const res = await fetch(API + '/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'שגיאה');
+
+    authToken = data.token;
+    localStorage.setItem('lobby_token', authToken);
+    showApp();
+  } catch(e) {
+    errEl.textContent = e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'התחבר';
+  }
+}
+
+function logout() {
+  fetch(API + '/auth/logout', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + authToken },
+  }).catch(() => {});
+  authToken = '';
+  localStorage.removeItem('lobby_token');
+  document.getElementById('shell').style.display = 'none';
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('login-username').value = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-error').textContent = '';
+}
+
+async function checkSession() {
+  if (!authToken) return false;
+  try {
+    const res = await fetch(API + '/auth/me', {
+      headers: { Authorization: 'Bearer ' + authToken },
+    });
+    if (res.ok) return true;
+  } catch {}
+  localStorage.removeItem('lobby_token');
+  authToken = '';
+  return false;
+}
+
+function showApp() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('shell').style.display = 'flex';
+  init();
+}
+
+(async () => {
+  if (await checkSession()) showApp();
+})();
 
 // ══ Nav ══════════════════════════════════════════════════════════
 document.querySelectorAll('.nav-item').forEach(item => {
@@ -597,7 +742,7 @@ function toast(msg, type='ok') {
 
 // ══ API helpers ═══════════════════════════════════════════════════
 async function api(method, path, body) {
-  const opts = { method, headers: {} };
+  const opts = { method, headers: { Authorization: 'Bearer ' + authToken } };
   if (body instanceof FormData) {
     opts.body = body;
   } else if (body) {
@@ -605,6 +750,7 @@ async function api(method, path, body) {
     opts.body = JSON.stringify(body);
   }
   const res = await fetch(API + path, opts);
+  if (res.status === 401) { logout(); throw new Error('session expired'); }
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
   return json;

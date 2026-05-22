@@ -12,6 +12,12 @@ services:
         value: /data
       - key: UPLOAD_DIR
         value: /data/uploads
+      - key: XIBO_URL
+        value: https://ds.xvision.co.il
+      - key: XIBO_CLIENT_ID
+        sync: false
+      - key: XIBO_CLIENT_SECRET
+        sync: false
     disk:
       name: lobby-data
       mountPath: /data
