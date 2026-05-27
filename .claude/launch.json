@@ -5,7 +5,8 @@
       "name": "lobby-cms",
       "runtimeExecutable": "node",
       "runtimeArgs": ["server.js"],
-      "port": 3400
+      "port": 3400,
+      "cwd": "/Users/nirsala/lobby-cms"
     }
   ]
 }

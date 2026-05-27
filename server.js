@@ -1,14 +1,14 @@
 /**
  * server.js — Pixel Lobby CMS
- * מערכת ניהול תוכן ללובי עם אינטגרציית Xibo
+ * מערכת ניהול תוכן ללובי
  */
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const express = require('express');
 const cors    = require('cors');
 const path    = require('path');
 
 const { router: apiRouter } = require('./routes/api');
-const xiboRouter = require('./routes/xibo');
+const signageRouter = require('./routes/signage');
 const { router: authRouter, requireAuth } = require('./routes/auth');
 
 const app  = express();
@@ -25,27 +25,24 @@ app.use('/display', express.static(path.join(__dirname, 'public', 'display')));
 app.use('/admin',   express.static(path.join(__dirname, 'public', 'admin')));
 app.use('/assets',  express.static(path.join(__dirname, 'public', 'assets')));
 
-// Public API routes (no auth required)
+// Public API routes
 app.use('/api/auth', authRouter);
 
-// Auth gate — skip for public endpoints, require for everything else
-const PUBLIC_PATHS = ['/display/state', '/events', '/rss/preview'];
+// Auth gate — skip for public endpoints
+const PUBLIC_PATHS = ['/display/state', '/events', '/rss/preview', '/rss/sources'];
 app.use('/api', (req, res, next) => {
   if (req.path.startsWith('/auth')) return next('route');
   if (PUBLIC_PATHS.includes(req.path)) return next();
   requireAuth(req, res, next);
 });
 
-// All API routes (auth already checked above)
 app.use('/api', apiRouter);
-app.use('/api/xibo', xiboRouter);
+app.use('/api/signage', signageRouter);
 
-// Root → admin panel
 app.get('/', (req, res) => res.redirect('/admin/'));
 
 app.listen(PORT, () => {
-  console.log(`\n🖥️  Pixel Lobby CMS פועל על http://localhost:${PORT}`);
-  console.log(`   פאנל ניהול : http://localhost:${PORT}/admin/`);
-  console.log(`   מסך תצוגה  : http://localhost:${PORT}/display/`);
-  console.log(`   API        : http://localhost:${PORT}/api/\n`);
+  console.log(`\n  Pixel Lobby CMS on http://localhost:${PORT}`);
+  console.log(`  Admin : http://localhost:${PORT}/admin/`);
+  console.log(`  Display: http://localhost:${PORT}/display/?user=USERNAME\n`);
 });

@@ -1,7 +1,7 @@
 {
   "name": "lobby-cms",
   "version": "1.0.0",
-  "description": "Pixel Lobby CMS — מערכת ניהול תוכן ללובי עם אינטגרציית Xibo",
+  "description": "Pixel Lobby CMS — מערכת ניהול תוכן ללובי",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

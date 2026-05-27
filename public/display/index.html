@@ -285,13 +285,14 @@ html,body{
 
 <script>
 const API = '/api';
+const USERNAME = new URLSearchParams(window.location.search).get('user') || '';
 let state = null;
 let mediaIndex = 0;
 let mediaDurations = [];
 
 async function loadState() {
   try {
-    const res = await fetch(API + '/display/state');
+    const res = await fetch(API + '/display/state?user=' + encodeURIComponent(USERNAME));
     state = await res.json();
     applyState();
   } catch(e) { console.error('State load failed:', e); }
@@ -495,7 +496,7 @@ function updateClock() {
 }
 
 function updateHebrew() {
-  fetch(API + '/display/state')
+  fetch(API + '/display/state?user=' + encodeURIComponent(USERNAME))
     .then(r => r.json())
     .then(s => {
       const el = document.getElementById('clock-hebrew');
@@ -506,7 +507,7 @@ function updateHebrew() {
 
 // ── SSE ───────────────────────────────────────────────────────────
 function connectSSE() {
-  const evts = new EventSource(API + '/events');
+  const evts = new EventSource(API + '/events?user=' + encodeURIComponent(USERNAME));
   evts.onmessage = e => {
     const msg = JSON.parse(e.data);
     if (msg.type === 'update') loadState();
